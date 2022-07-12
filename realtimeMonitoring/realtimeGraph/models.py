@@ -84,7 +84,7 @@ class Location(models.Model):
     class Meta:
         unique_together = ("city", "state", "country")
 
-    def str(self):
+    def __str__(self):
         return "{} {} {}".format(self.city.name, self.state.name, self.country.name)
 
 

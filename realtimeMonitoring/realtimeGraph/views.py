@@ -678,6 +678,76 @@ class RemaView(TemplateView):
         return context
 
 
+def get_data_from_location_station_json(request, **kwargs):
+    data_result = {}
+
+    country_param = request.GET.get("country")
+    city_param = request.GET.get("city")
+    state_param = request.GET.get("state")
+
+    locations = Location.objects.all()
+    if country_param:
+        locations = locations.filter(country__name=country_param)
+    if city_param:
+        locations = locations.filter(city__name=city_param)
+    if state_param:
+        locations = locations.filter(state__name=state_param)
+
+    try:
+        start = datetime.fromtimestamp(
+            float(request.GET.get("from")) / 1000
+        )
+    except:
+        start = None
+    try:
+        end = datetime.fromtimestamp(
+            float(request.GET.get("to")) / 1000)
+    except:
+        end = None
+    if start == None and end == None:
+        start = datetime.now()
+        start = start - dateutil.relativedelta.relativedelta(weeks=1)
+        end = datetime.now()
+        end += dateutil.relativedelta.relativedelta(days=1)
+    elif end == None:
+        end = datetime.now()
+    elif start == None:
+        start = datetime.fromtimestamp(0)
+
+    data = []
+
+    for location in locations:
+        stations = Station.objects.filter(location=location)
+        locationData = Data.objects.filter(station__in=stations, time__gte=start.date(), time__lte=end.date())
+        if locationData.count() <= 0:
+            continue
+        minVal = locationData.aggregate(
+            Min('value'))['value__min']
+        maxVal = locationData.aggregate(
+            Max('value'))['value__max']
+        avgVal = locationData.aggregate(
+            Avg('value'))['value__avg']
+        data.append({
+            'name': f'{location.city.name}, {location.state.name}, {location.country.name}',
+            'lat': location.lat,
+            'lng': location.lng,
+            'population': stations.count(),
+            'min': minVal if minVal else 0,
+            'max': maxVal if maxVal else 0,
+            'avg': round(avgVal if avgVal else 0, 2),
+        })
+
+    startFormatted = start.strftime("%d/%m/%Y") if start else " "
+    endFormatted = end.strftime("%d/%m/%Y") if end else " "
+
+    data_result["locations"] = [str(loc) for loc in locations]
+    data_result["start"] = startFormatted
+    data_result["end"] = endFormatted
+    data_result["data"] = data
+
+    return JsonResponse(data_result)
+
+
 def download_csv_data(request):
     print("Getting time for csv req")
     startT = time.time()
