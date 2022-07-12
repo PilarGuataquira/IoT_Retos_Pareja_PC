@@ -616,9 +616,9 @@ La respuesta tiene esta estructura:
 def get_data_from_location_station_json(request, **kwargs):
     data_result = {}
 
-    country_param = kwargs.get("country")
-    city_param = kwargs.get("city")
-    state_param = kwargs.get("state")
+    country_param = request.GET.get("country")
+    city_param = request.GET.get("city")
+    state_param = request.GET.get("state")
 
     locations = Location.objects.all()
     if country_param:
