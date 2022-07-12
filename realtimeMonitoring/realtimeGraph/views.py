@@ -622,11 +622,11 @@ def get_data_from_location_station_json(request, **kwargs):
 
     locations = Location.objects.all()
     if country_param:
-        locations = locations.filter(country=country_param)
+        locations = locations.filter(country__name=country_param)
     if city_param:
-        locations = locations.filter(city=city_param)
+        locations = locations.filter(city__name=city_param)
     if state_param:
-        locations = locations.filter(state=state_param)
+        locations = locations.filter(state__name=state_param)
 
     try:
         start = datetime.fromtimestamp(
