@@ -714,11 +714,15 @@ def get_data_from_location_station_json(request, **kwargs):
     elif start == None:
         start = datetime.fromtimestamp(0)
 
+
+    start_ts = int(start.timestamp() * 1000000)
+    end_ts = int(end.timestamp() * 1000000)
+
     data = []
 
     for location in locations:
         stations = Station.objects.filter(location=location)
-        locationData = Data.objects.filter(station__in=stations, time__gte=start.date(), time__lte=end.date())
+        locationData = Data.objects.filter(station__in=stations, time__gte=start_ts, time__lte=end_ts)
         if locationData.count() <= 0:
             continue
         minVal = locationData.aggregate(
